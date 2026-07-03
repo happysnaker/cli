@@ -379,7 +379,13 @@ func NewCmdExtension(f *cmdutil.Factory) *cobra.Command {
 					if ext, err := checkValidExtension(cmd.Root(), m, repo.RepoName(), repo.RepoOwner()); err != nil {
 						// If an existing extension was found and --force was specified, attempt to upgrade.
 						if forceFlag && ext != nil {
-							return upgradeFunc(ext.Name(), forceFlag)
+							if pinFlag != "" {
+								if err := m.Remove(ext.Name()); err != nil {
+									return fmt.Errorf("failed to remove existing extension before pinned reinstall: %w", err)
+								}
+							} else {
+								return upgradeFunc(ext.Name(), forceFlag)
+							}
 						}
 
 						if errors.Is(err, alreadyInstalledError) {
